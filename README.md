@@ -1,2 +1,2 @@
 # react-mlyn
-react bindings to mly
+react bindings to mlyn

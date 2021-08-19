@@ -1,0 +1,9 @@
+{
+  "name": "react-mlyn",
+  "version": "0.0.1",
+  "description": "React bindings to mlyn",
+  "main": "lib/index.js",
+  "repository": "https://github.com/vaukalak/react-mlyn",
+  "author": "vaukalak",
+  "license": "MIT"
+}
