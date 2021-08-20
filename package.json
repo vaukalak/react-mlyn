@@ -12,11 +12,18 @@
     "build": "npx babel src --out-dir lib",
     "prepublish": "yarn clean && yarn build"
   },
+  "files": [
+    "lib",
+    "src"
+  ],
   "devDependencies": {
     "@babel/cli": "^7.14.8",
     "@babel/core": "^7.15.0",
     "@babel/node": "^7.14.9",
     "@babel/preset-env": "^7.15.0",
     "jest": "^27.0.6"
+  },
+  "peerDependencies": {
+    "react": "^17.0.2"
   }
 }
