@@ -7,9 +7,10 @@
   "author": "vaukalak",
   "license": "MIT",
   "scripts": {
-    "test": "npx jest",
+    "ts": "npx tsc --rootDir src --declarationDir types --downlevelIteration --declaration --emitDeclarationOnly",
+    "test": "echo 0",
     "clean": "rm -rf dist",
-    "build": "npx babel src --out-dir lib",
+    "build": "npx babel src --out-dir lib && yarn ts",
     "prepublish": "yarn clean && yarn build"
   },
   "files": [
@@ -21,9 +22,15 @@
     "@babel/core": "^7.15.0",
     "@babel/node": "^7.14.9",
     "@babel/preset-env": "^7.15.0",
-    "jest": "^27.0.6"
+    "@babel/preset-typescript": "^7.15.0",
+    "@types/react": "^17.0.19",
+    "jest": "^27.0.6",
+    "mlyn": "^0.3.3",
+    "react": "^17.0.2",
+    "typescript": "^4.3.5"
   },
   "peerDependencies": {
+    "mlyn": "^0.3.3",
     "react": "^17.0.2"
   }
 }

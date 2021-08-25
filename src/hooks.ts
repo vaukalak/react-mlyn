@@ -1,10 +1,10 @@
 import { useState, useEffect, useMemo, useRef, useCallback } from "react";
-import { runInReactiveScope, createSubject, destroyScope } from "mlyn";
+import { runInReactiveScope, createSubject, destroyScope, Scope, Subject } from "mlyn";
 
-export const useMlynEffect = (callback) => {
+export const useMlynEffect = (callback: (() => void) | (() => Function)) => {
   useEffect(() => {
     const scope = runInReactiveScope(() => {
-      callback();
+      return callback();
     });
     return () => {
       destroyScope(scope);
@@ -12,19 +12,23 @@ export const useMlynEffect = (callback) => {
   }, []); // no dependencies, run on every render
 };
 
-export const useCompute = (callback) => {
+export const useCompute = <T>(callback: () => T): T => {
   const [computed, setComputed] = useState(callback());
-  useEffect(() => {
-    let lastValue;
-    const scope = runInReactiveScope(() => {
-      const newValue = callback();
-      if (lastValue !== newValue) {
-        lastValue = newValue;
-        setComputed(newValue);
-      }
-    });
-    return () => destroyScope(scope);
-  }, []);
+  useMlynEffect(() => {
+    setComputed(callback());
+  });
+  
+  // useEffect(() => {
+  //   let lastValue;
+  //   const scope = runInReactiveScope(() => {
+  //     const newValue = callback();
+  //     if (lastValue !== newValue) {
+  //       lastValue = newValue;
+  //       setComputed(newValue);
+  //     }
+  //   });
+  //   return () => destroyScope(scope);
+  // }, []);
   return computed;
 };
 
@@ -35,9 +39,9 @@ export const useSelector = (selector, subject) => {
 };
 export const useMlynSelector = useSelector;
 
-export const useSubject = (initialValue) => {
-  const ref = useRef(initialValue);
-  const subject = useMemo(() => createSubject(ref.current), []);
+export const useSubject = <T>(initialValue: T): Subject<T> => {
+  const ref = useRef<T>(initialValue);
+  const subject = useMemo(() => createSubject<T>(ref.current), []) as Subject<T>;
 
   runInReactiveScope(() => {
     ref.current = subject();
@@ -45,7 +49,14 @@ export const useSubject = (initialValue) => {
   return subject;
 };
 
-export const useSubjectAccessors = (subject) => {
+export const useSubjectValue = <T>(subject: Subject<T>): T => {
+  return useCompute(() => subject());
+};
+
+/**
+ * deprecated
+ */
+export const useSubjectAccessors = <T>(subject: Subject<T>) => {
   const [state, setState] = useState(() => subject());
   useEffect(() => {
     const scope = runInReactiveScope(() => {
@@ -56,7 +67,7 @@ export const useSubjectAccessors = (subject) => {
       destroyScope(scope);
     };
   }, [subject]);
-  const setSubjectState = useCallback((value) => {
+  const setSubjectState = useCallback((value: T) => {
     subject(value);
   }, []);
   return [state, setSubjectState];
@@ -74,7 +85,7 @@ export const shallowCompare = (a, b) => {
   return true;
 };
 
-export const compareArrays = (first, second) => {
+export const compareArrays = (first: any[], second: any[]) => {
   if (!first || !second) {
     return false;
   }
