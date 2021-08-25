@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "description": "React bindings to mlyn",
   "main": "lib/index.js",
+  "types": "types/index.js",
   "repository": "https://github.com/vaukalak/react-mlyn",
   "author": "vaukalak",
   "license": "MIT",
@@ -15,6 +16,7 @@
   },
   "files": [
     "lib",
+    "types",
     "src"
   ],
   "devDependencies": {
