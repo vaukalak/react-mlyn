@@ -3342,10 +3342,10 @@ mixin-deep@^1.2.0:
     for-in "^1.0.2"
     is-extendable "^1.0.1"
 
-mlyn@^0.3.3:
-  version "0.3.3"
-  resolved "https://registry.npmjs.org/mlyn/-/mlyn-0.3.3.tgz#5b886a0fd7cad87c9f1cc664f0ce7472ba1920c6"
-  integrity sha512-cDGRmuPHzTYmaTR7LKdtzE4A1TnMelW+M94vlvl8EbQvjCAx2McF65twHEF9tzqMmW23pQyWK8kHKR2A9rQ3ew==
+mlyn@^0.3.4:
+  version "0.3.4"
+  resolved "https://registry.npmjs.org/mlyn/-/mlyn-0.3.4.tgz#3ccee86df0b091759ba2c483310b775d91ac6e3a"
+  integrity sha512-il/CCT89yx9KWjun1vj5l6NV4Z08zJ+RpD40JcizRO1N+Isp+PxlnrNXOoi1+MvcpB/lh5wlGV731MfFEU6fHg==
 
 ms@2.0.0:
   version "2.0.0"

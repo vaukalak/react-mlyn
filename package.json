@@ -1,6 +1,6 @@
 {
   "name": "react-mlyn",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "React bindings to mlyn",
   "main": "lib/index.js",
   "types": "types/index.js",
@@ -11,7 +11,7 @@
     "ts": "npx tsc --rootDir src --declarationDir types --downlevelIteration --declaration --emitDeclarationOnly",
     "test": "echo 0",
     "clean": "rm -rf dist",
-    "build": "npx babel src --out-dir lib && yarn ts",
+    "build": "npx babel src --extensions '.ts' --out-dir lib && yarn ts",
     "prepublish": "yarn clean && yarn build"
   },
   "files": [
@@ -27,12 +27,12 @@
     "@babel/preset-typescript": "^7.15.0",
     "@types/react": "^17.0.19",
     "jest": "^27.0.6",
-    "mlyn": "^0.3.3",
+    "mlyn": "^0.3.4",
     "react": "^17.0.2",
     "typescript": "^4.3.5"
   },
   "peerDependencies": {
-    "mlyn": "^0.3.3",
+    "mlyn": "^0.3.4",
     "react": "^17.0.2"
   }
 }
