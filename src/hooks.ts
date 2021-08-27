@@ -17,18 +17,6 @@ export const useCompute = <T>(callback: () => T): T => {
   useMlynEffect(() => {
     setComputed(callback());
   });
-  
-  // useEffect(() => {
-  //   let lastValue;
-  //   const scope = runInReactiveScope(() => {
-  //     const newValue = callback();
-  //     if (lastValue !== newValue) {
-  //       lastValue = newValue;
-  //       setComputed(newValue);
-  //     }
-  //   });
-  //   return () => destroyScope(scope);
-  // }, []);
   return computed;
 };
 
