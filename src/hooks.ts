@@ -27,6 +27,11 @@ export const useSelector = (selector, subject) => {
 };
 export const useMlynSelector = useSelector;
 
+export const useSubjectInputBinding = <T>(subject: Subject<T>) => {
+  const value = useSubjectValue(subject);
+  return { value, onChange: (e) => subject(e.target.value) };
+};
+
 export const useSubject = <T>(initialValue: T): Subject<T> => {
   const ref = useRef<T>(initialValue);
   const subject = useMemo(() => createSubject<T>(ref.current), []) as Subject<T>;

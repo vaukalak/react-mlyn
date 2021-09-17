@@ -7,5 +7,6 @@ export {
   shallowCompare,
   compareArrays,
   useSubjectValue,
+  useSubjectInputBinding,
 } from "./hooks";
 export { Show } from "./components";
