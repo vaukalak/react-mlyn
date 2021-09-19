@@ -3,6 +3,10 @@ export declare const useMlynEffect: (callback: (() => void) | (() => Function)) 
 export declare const useCompute: <T>(callback: () => T) => T;
 export declare const useSelector: (selector: any, subject: any) => any;
 export declare const useMlynSelector: (selector: any, subject: any) => any;
+export declare const useSubjectInputBinding: <T>(subject: Subject<T>) => {
+    value: T;
+    onChange: (e: any) => void;
+};
 export declare const useSubject: <T>(initialValue: T) => Subject<T>;
 export declare const useSubjectValue: <T>(subject: Subject<T>) => T;
 /**
