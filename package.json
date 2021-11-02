@@ -11,7 +11,7 @@
     "ts": "npx tsc --rootDir src --declarationDir types --downlevelIteration --declaration --emitDeclarationOnly",
     "test": "echo 0",
     "clean": "rm -rf dist",
-    "build": "npx babel src --extensions '.ts' --out-dir lib && yarn ts",
+    "build": "npx babel src --extensions '.ts,.tsx' --out-dir lib && yarn ts",
     "prepublish": "yarn clean && yarn build"
   },
   "files": [
