@@ -9,7 +9,7 @@ export {
   useSubjectValue,
   useSubjectInputBinding,
 } from "./hooks";
-export { Show } from "./components";
+export { Show, For } from "./components";
 export { mlynify, seal } from "./utils";
 import { Mlyn } from "./dom";
 
