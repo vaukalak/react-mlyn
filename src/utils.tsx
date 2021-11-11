@@ -67,7 +67,7 @@ const mergeDeep = (base: any, override: any, deepKeys: any[]) => {
 };
 
 export const seal = <P extends object>(Component: FunctionComponent<P>) =>
-  React.memo(Component, () => false);
+  React.memo(Component, () => true);
 
 const getValues = (
   subjects: { [key: string]: Subject<any> },
