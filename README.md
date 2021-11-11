@@ -48,7 +48,8 @@ Used to display a collection of elements, by providing items to render and key e
       <button onClick={() => removeItem(index$())}>x</button>
     </div>
   )}
-</For>```
+</For>
+```
 
 
 
