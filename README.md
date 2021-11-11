@@ -62,21 +62,8 @@ Creates a memoized subject, by passing to it initial state:
 const subject = useSubject({ x: 1 });
 ```
 
-
-**(Advanced) useSubjectValue**: creates react state entry binded to the subject value. This hook will cause component re-render, which might can be required in components like `For`.
-```
-const subject = useSubject(0);
-const value = useSubjectValue(subject); // starts with 0
-useEffect(() => {
-    subject(1);
-    // component will rerender
-    // `value` will become 1
-}, []);
-
-```
-
-**(Advanced) useMlynEffect**:
-Simlar to reacts `useEffect`,  however doesn't require dependencies, cause it's automatically subscribed to to mlyn bindings. This hook will cause component re-render, which might can be required in components like `For`.
+**useMlynEffect**:
+Simlar to reacts `useEffect`,  however doesn't require dependencies, cause it's automatically subscribed to to mlyn bindings. Please note, that invocation of hook callback doesn't mean that component has been re-rendered.
 
 ```
 const usePersist = (key: string, subject: Sybject<any>) => {
@@ -90,6 +77,18 @@ const usePersist = (key: string, subject: Sybject<any>) => {
         localStorage.setItem(key, JSON.stringify(subject());
     });
 }
+```
+
+**(Advanced) useSubjectValue**: creates react state entry binded to the subject value. This hook will cause component re-render, which might can be required in components like `For`.
+```
+const subject = useSubject(0);
+const value = useSubjectValue(subject); // starts with 0
+useEffect(() => {
+    subject(1);
+    // component will rerender
+    // `value` will become 1
+}, []);
+
 ```
 
 Since `subject` has been invoked during execution of `useMlynEffect` callback, this callback will be reinvoked on every change of `subject` value.
