@@ -1,13 +1,28 @@
 import React, { useRef } from "react";
 import { seal } from "./utils";
-import { useCompute, useMlynEffect, useSubject, useSubjectValue } from "./hooks";
-import { batch, createSubject, destroyScope, muteScope, runInReactiveScope, Subject } from "mlyn";
+import {
+  useCompute,
+  useMlynEffect,
+  useSubject,
+  useSubjectValue,
+} from "./hooks";
+import {
+  batch,
+  createSubject,
+  muteScope,
+  runInReactiveScope,
+  Subject,
+} from "mlyn";
 
-export const Show = ({ when, children }) => {
+interface ShowProps {
+  when: () => any;
+  children: () => React.ReactElement;
+}
+
+export const Show = seal(({ when, children }: ShowProps) => {
   const visible = useCompute(() => Boolean(when()));
   return visible && children();
-};
-  
+});
 
 interface Props<T> {
   each: Subject<T[]>;
@@ -62,9 +77,7 @@ export const For = seal(<T extends any>(props: Props<T>) => {
 
       const item$ = createSubject(newItems[i]);
       const index$ = createSubject(i);
-      const Wrapped = seal(
-        () => children(item$, index$),
-      );
+      const Wrapped = seal(() => children(item$, index$));
       let disposer;
       muteScope(() => {
         let firstRun = true;
@@ -76,7 +89,10 @@ export const For = seal(<T extends any>(props: Props<T>) => {
           }
           muteScope(() => {
             block = true;
-            if (getKey(each[index$()](), index$()) === getKey(updatedValue, index$())) {
+            if (
+              getKey(each[index$()](), index$()) ===
+              getKey(updatedValue, index$())
+            ) {
               each[index$()](updatedValue);
             } else {
               // will this ever happen?
@@ -99,14 +115,14 @@ export const For = seal(<T extends any>(props: Props<T>) => {
         key,
         item$,
         index$,
-        Wrapped
+        Wrapped,
       };
       update = true;
       return cache[key];
     });
     for (let nKey in notInvoked) {
       delete cache[nKey];
-      destroyScope(notInvoked[nKey].disposer);
+      notInvoked[nKey].disposer();
     }
     if (update || oldLength !== newItems.length) {
       forceUpdate$(forceUpdateRef.current + 1);

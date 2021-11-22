@@ -1,6 +1,7 @@
 import React, { useState, FunctionComponent, useMemo } from "react";
-import { Subject } from "mlyn";
+import { Subject, PrimitiveSubject, muteScope } from "mlyn";
 import { useMlynEffect } from "./hooks";
+import { useSubject, useSubjectValue } from ".";
 
 type ValueOf<T extends any[]> =
   | (T[0] extends undefined ? never : T[0])
@@ -16,10 +17,12 @@ type ValueOf<T extends any[]> =
   | (T[10] extends undefined ? never : T[10]);
 
 type RactiveProps<T> = {
-  [K in keyof T as `${string & K}$`]: Subject<T[K]>;
+  [K in keyof T as `${string & K}$`]: K extends "children" ? never : () => T[K];
 };
 
-type ReactifyFlat<T extends Record<string, any>> = T & RactiveProps<T>;
+type ReactifyFlat<T extends Record<string, any>> = Omit<T, "children"> & {
+  children?: T["children"] & (() => T["children"]);
+} & RactiveProps<T>;
 
 type DeepProps<T, Keys extends string[]> = {
   [K in keyof T]: K extends ValueOf<Keys> ? ReactifyFlat<T[K]> : T[K];
@@ -70,7 +73,7 @@ export const seal = <P extends object>(Component: FunctionComponent<P>) =>
   React.memo(Component, () => true);
 
 const getValues = (
-  subjects: { [key: string]: Subject<any> },
+  subjects: { [key: string]: () => any },
   deepKeys: string[]
 ) => {
   const newValues: any = {};
@@ -78,7 +81,7 @@ const getValues = (
     if (deepKeys.indexOf(key) === -1) {
       newValues[key] = subjects[key]();
     } else {
-      newValues[key] = getValues(subjects[key], []);
+      newValues[key] = getValues(subjects[key] as Subject<any>, []);
     }
   }
 
@@ -90,15 +93,55 @@ export const mlynify = <T extends Record<string, any>, Keys extends string[]>(
   deepKeys: Keys
 ) =>
   seal((props: Reactify<T, Keys>) => {
+    const forceUpdate$ = useSubject(0);
+    useSubjectValue(forceUpdate$);
     const partitioned = useMemo(() => partitionObjectDeep(props, deepKeys), []);
     const [plainProps, mlynProps] = partitioned;
     const [mlynState, setMlynState] = useState(getValues(mlynProps, deepKeys));
+    const getChlid = () => {
+      return typeof plainProps.children === "function"
+        ? plainProps.children()
+        : plainProps.children;
+    };
+    useMlynEffect(() => {
+      getChlid();
+      muteScope(() => {
+        forceUpdate$(forceUpdate$() + 1);
+      });
+    });
     useMlynEffect(() => {
       setMlynState(getValues(mlynProps, deepKeys));
     });
     return (
       <Component {...mergeDeep(plainProps, mlynState, deepKeys)}>
-        {mlynState.children || plainProps.children}
+        {getChlid()}
       </Component>
     );
   });
+
+export const shallowCompare = (a, b) => {
+  if (a === undefined || b === undefined) {
+    return a === b;
+  }
+  for (let key in a) {
+    if (a[key] !== b[key]) {
+      return false;
+    }
+  }
+  return true;
+};
+
+export const compareArrays = (first: any[], second: any[]) => {
+  if (!first || !second) {
+    return false;
+  }
+  if (first.length !== second.length) {
+    return false;
+  }
+  for (let i = 0; i < first.length; i++) {
+    if (first[i] !== second[i]) {
+      return false;
+    }
+  }
+  return true;
+};
