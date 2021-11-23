@@ -19,7 +19,8 @@ npm i -S react-mlyn mlyn
 
 ## Eamples
 
-TodoMVC app: https://codesandbox.io/s/react-mlyn-todo-mvc-owecw
+- [Simple TodoMVC app](https://codesandbox.io/s/react-mlyn-todo-mvc-owecw)
+- [Advanced TodoMVC app](https://codesandbox.io/s/react-mlyn-todo-mvc-with-filters-i5e7j)
 
 ## Develop
 
