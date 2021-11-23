@@ -1,6 +1,7 @@
 export {
   useMlynEffect,
   useCompute,
+  useMemoize,
   useProjectArray,
   useProjectSubject,
   useSubjectValue,
