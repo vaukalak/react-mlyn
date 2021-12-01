@@ -29,11 +29,11 @@
     "@babel/preset-typescript": "^7.15.0",
     "@types/react": "^17.0.19",
     "jest": "^27.0.6",
-    "mlyn": "^0.4.1",
+    "mlyn": "^0.4.2",
     "typescript": "^4.3.5"
   },
   "peerDependencies": {
-    "mlyn": "^0.4.1",
+    "mlyn": "^0.4.2",
     "react": "^17.0.2"
   }
 }

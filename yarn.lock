@@ -3380,10 +3380,10 @@ mixin-deep@^1.2.0:
     for-in "^1.0.2"
     is-extendable "^1.0.1"
 
-mlyn@^0.4.1:
-  version "0.4.1"
-  resolved "https://registry.yarnpkg.com/mlyn/-/mlyn-0.4.1.tgz#cdb450d98db6a53ae89b742781b11b308191157b"
-  integrity sha512-u5UzuuyktjoBhGEZf5hLY4/yvGEs39epRIIzWiSJwyowfycb8WsQNP8RJ4ic5WudjlIqxf/f2l+nt6uIWstU/w==
+mlyn@^0.4.2:
+  version "0.4.2"
+  resolved "https://registry.yarnpkg.com/mlyn/-/mlyn-0.4.2.tgz#9240ea44ce5f961350b5b90c11451cfeddd234be"
+  integrity sha512-opjQ2K3XVugrG/p1KM66/A+2E/HQCdXN2GsCMYiKQ2cnkzZT54+ah1y9bbrvzd2yea5fri/QQNIw8hlDFf+Z8A==
 
 ms@2.0.0:
   version "2.0.0"

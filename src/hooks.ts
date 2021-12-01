@@ -47,13 +47,14 @@ export const useProjectSubject = <T extends any>(
  * @param cb
  * @returns
  */
-export const useProjectArray = <T extends any>(
+export const useProjectArray = <T extends any, R extends any = T>(
   array$: Subject<T[]>,
-  projection: (array: Subject<T[]>) => T[],
-  getKey: (item: T) => string
+  projection: (array: Subject<T[]>) => R[],
+  getKey: (item: T | R) => string,
+  bindBack?: (item: R, keyToIndex: Record<string, number>) => void,
 ) => {
   const [result, scopeDestroyer] = useMemo(
-    () => projectArray(array$, projection, getKey),
+    () => projectArray(array$, projection, getKey, bindBack),
     []
   );
   useEffect(() => scopeDestroyer, []);
