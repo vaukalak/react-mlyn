@@ -2,19 +2,21 @@ import { PrimitiveSubject } from "mlyn";
 import React from "react";
 import { seal, mlynify } from "./utils";
 
+const domDeepProps = ["style"] as const;
+
 const InputBase = mlynify(
   (props: React.HTMLProps<HTMLInputElement>) => <input {...props} />,
-  ["style"]
+  domDeepProps,
 );
 
 const TextareaBase = mlynify(
   (props: React.HTMLProps<HTMLTextAreaElement>) => <textarea {...props} />,
-  ["style"]
+  domDeepProps,
 );
 
 const SelectBase = mlynify(
   (props: React.HTMLProps<HTMLSelectElement>) => <select {...props} />,
-  ["style"]
+  domDeepProps,
 );
 interface BindChecked {
   "bind:checked"?: PrimitiveSubject<boolean>;
@@ -78,30 +80,30 @@ const input = seal((props: InputProps) => {
 
 const div = mlynify(
   (props: React.HTMLProps<HTMLDivElement>) => <div {...props} />,
-  ["style"]
+  domDeepProps,
 );
 
 const span = mlynify(
   (props: React.HTMLProps<HTMLSpanElement>) => <span {...props} />,
-  ["style"]
+  domDeepProps,
 );
 
 const a = mlynify(
   (props: React.HTMLProps<HTMLAnchorElement>) => <a {...props} />,
-  ["style"]
+  domDeepProps,
 );
 
 const table = mlynify(
   (props: React.HTMLProps<HTMLTableElement>) => <table {...props} />,
-  ["style"]
+  domDeepProps,
 );
 const tr = mlynify(
   (props: React.HTMLProps<HTMLTableRowElement>) => <tr {...props} />,
-  ["style"]
+  domDeepProps,
 );
 const td = mlynify(
   (props: React.HTMLProps<HTMLTableCellElement>) => <td {...props} />,
-  ["style"]
+  domDeepProps,
 );
 
 export const Mlyn: {

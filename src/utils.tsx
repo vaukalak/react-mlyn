@@ -3,7 +3,7 @@ import { Subject, PrimitiveSubject, muteScope } from "mlyn";
 import { useMlynEffect } from "./hooks";
 import { useSubject, useSubjectValue } from ".";
 
-type ValueOf<T extends any[]> =
+type ValueOf<T extends readonly any[]> =
   | (T[0] extends undefined ? never : T[0])
   | (T[1] extends undefined ? never : T[1])
   | (T[2] extends undefined ? never : T[2])
@@ -16,25 +16,23 @@ type ValueOf<T extends any[]> =
   | (T[9] extends undefined ? never : T[9])
   | (T[10] extends undefined ? never : T[10]);
 
-type RactiveProps<T> = {
-  [K in keyof T as `${string & K}$`]: K extends "children" ? never : () => T[K];
+type RactiveProps<T, DeepKeys extends string> = {
+  [K in keyof Omit<T, "children" | DeepKeys> as `${string & K}$`]: () => T[K];
 };
 
-type ReactifyFlat<T extends Record<string, any>> = Omit<T, "children"> & {
-  children?: T["children"] & (() => T["children"]);
-} & RactiveProps<T>;
-
-type DeepProps<T, Keys extends string[]> = {
-  [K in keyof T]: K extends ValueOf<Keys> ? ReactifyFlat<T[K]> : T[K];
+type RactiveSubProps<T> = {
+  [K in keyof T]: () => T[K];
 };
 
-type Reactify<T extends Record<string, any>, Keys extends string[]> = DeepProps<
-  T,
-  Keys
-> &
-  RactiveProps<T>;
+type DeepProps<T, DeepKeys extends keyof T> = {
+  [K in keyof Pick<T, DeepKeys> as `${string & K}$`]: RactiveSubProps<T[K]>;
+};
 
-export const partitionObjectDeep = (entries: any, deepKeys: any[] = []) =>
+type Reactify<T extends Record<string, any>, DeepKeys extends readonly string[]> = T &
+  DeepProps<T, ValueOf<DeepKeys>> &
+  RactiveProps<T, ValueOf<DeepKeys>>;
+
+export const partitionObjectDeep = (entries: any, deepKeys: readonly any[] = []) =>
   Object.keys(entries).reduce(
     (result, key) => {
       if (deepKeys.indexOf(key) !== -1) {
@@ -54,7 +52,7 @@ export const partitionObjectDeep = (entries: any, deepKeys: any[] = []) =>
     [{} as any, {} as any]
   );
 
-const mergeDeep = (base: any, override: any, deepKeys: any[]) => {
+const mergeDeep = (base: any, override: any, deepKeys: readonly any[]) => {
   const deepOverride = deepKeys.reduce((acc, nextKey) => {
     acc[nextKey] = {
       ...base[nextKey],
@@ -74,7 +72,7 @@ export const seal = <P extends object>(Component: FunctionComponent<P>) =>
 
 const getValues = (
   subjects: { [key: string]: () => any },
-  deepKeys: string[]
+  deepKeys: readonly string[]
 ) => {
   const newValues: any = {};
   for (let key in subjects) {
@@ -88,7 +86,7 @@ const getValues = (
   return newValues;
 };
 
-export const mlynify = <T extends Record<string, any>, Keys extends string[]>(
+export const mlynify = <T extends Record<string, any>, Keys extends readonly string[]>(
   Component: React.FC<T>,
   deepKeys: Keys
 ) =>
