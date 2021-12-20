@@ -35,7 +35,6 @@ export const For = seal(<T extends any>(props: Props<T>) => {
   const { current: cache } = useRef({});
   const itemsRef = useRef([]);
   const [, forceUpdate$] = useState(0);
-
   let block = false;
   useMlynEffect(() => {
     const newItems = each();
@@ -91,17 +90,6 @@ export const For = seal(<T extends any>(props: Props<T>) => {
               getKey(updatedValue, index$())
             ) {
               each[index$()](updatedValue);
-            } else {
-              // will this ever happen?
-              console.warn(
-                "Mlyn: unexpected behavior #1 happened, please report an issue!"
-              );
-              for (let i = 0; i < each().length; i++) {
-                if (getKey(each[i](), i) === getKey(updatedValue, index$())) {
-                  each[i](updatedValue);
-                  break;
-                }
-              }
             }
             block = false;
           });

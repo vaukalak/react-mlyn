@@ -1,5 +1,5 @@
-import React, { useState, FunctionComponent, useMemo } from "react";
-import { Subject, PrimitiveSubject, muteScope } from "mlyn";
+import React, { useState, FunctionComponent, useMemo, useEffect, useRef } from "react";
+import { Subject, PrimitiveSubject, muteScope, runInReactiveScope } from "mlyn";
 import { useMlynEffect } from "./hooks";
 import { useSubject, useSubjectValue } from ".";
 
@@ -67,8 +67,8 @@ const mergeDeep = (base: any, override: any, deepKeys: readonly any[]) => {
   };
 };
 
-export const seal = <P extends object>(Component: FunctionComponent<P>) =>
-  React.memo(Component, () => true);
+export const seal = <P extends object>(Component: (props: P) => React.ReactElement) =>
+  React.memo(Component, () => true) as (props: P) => React.ReactElement;
 
 const getValues = (
   subjects: { [key: string]: () => any },
@@ -90,33 +90,49 @@ const getValues = (
   return newValues;
 };
 
+const unitialized = {};
+
+const useForceUpdate = () => {
+  const [, forceUpdate] = useState(0);
+  return () => forceUpdate(v => v + 1);
+}
+
+const useObervableValue = <T extends any>(observable: () => T): T => {
+  // @ts-ignore
+  const ref = useRef<T>(unitialized);
+  const forceUpdate = useForceUpdate();
+  const destroyScope = useMemo(() => runInReactiveScope(() => {
+    if (ref.current === unitialized) {
+      ref.current = observable();
+    } else {
+      ref.current = observable();
+      forceUpdate();
+    }
+  }), []);
+  useEffect(() => {
+    destroyScope();
+  })
+  return ref.current;
+}
+
 export const mlynify = <T extends Record<string, any>, Keys extends readonly string[]>(
   Component: React.FC<T>,
   deepKeys: Keys
 ) =>
   seal((props: Reactify<T, Keys>) => {
-    const [, forceUpdate$] = useState(0);
+    // const [, forceUpdate$] = useState(0);
     // useSubjectValue(forceUpdate$);
     const partitioned = useMemo(() => partitionObjectDeep(props, deepKeys), []);
     const [plainProps, mlynProps] = partitioned;
-    const [mlynState, setMlynState] = useState(getValues(mlynProps, deepKeys));
-    const getChlid = () => {
+    const mlynState = getValues(mlynProps, deepKeys);
+    const child = useObervableValue(() => {
       return typeof plainProps.children === "function"
-        ? plainProps.children()
-        : plainProps.children;
-    };
-    useMlynEffect(() => {
-      getChlid();
-      muteScope(() => {
-        forceUpdate$(v => v + 1);
-      });
-    });
-    useMlynEffect(() => {
-      setMlynState(getValues(mlynProps, deepKeys));
+      ? plainProps.children()
+      : plainProps.children;
     });
     return (
       <Component {...mergeDeep(plainProps, mlynState, deepKeys)}>
-        {getChlid()}
+        {child}
       </Component>
     );
   });
