@@ -1,4 +1,4 @@
-import React, { useRef } from "react";
+import React, { useRef, useState } from "react";
 import { seal } from "./utils";
 import {
   useCompute,
@@ -34,10 +34,7 @@ export const For = seal(<T extends any>(props: Props<T>) => {
   const { each, children, getKey } = props;
   const { current: cache } = useRef({});
   const itemsRef = useRef([]);
-  const forceUpdate$ = useSubject(0);
-  let forceUpdateValue = useSubjectValue(forceUpdate$);
-  const forceUpdateRef = useRef(forceUpdateValue);
-  forceUpdateRef.current = forceUpdateValue;
+  const [, forceUpdate$] = useState(0);
 
   let block = false;
   useMlynEffect(() => {
@@ -125,7 +122,7 @@ export const For = seal(<T extends any>(props: Props<T>) => {
       notInvoked[nKey].disposer();
     }
     if (update || oldLength !== newItems.length) {
-      forceUpdate$(forceUpdateRef.current + 1);
+      forceUpdate$(v => v + 1);
     }
   });
   return (

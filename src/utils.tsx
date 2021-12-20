@@ -36,9 +36,9 @@ export const partitionObjectDeep = (entries: any, deepKeys: readonly any[] = [])
   Object.keys(entries).reduce(
     (result, key) => {
       if (deepKeys.indexOf(key) !== -1) {
-        const [observables, normal] = partitionObjectDeep(entries[key]);
-        result[0][key] = observables;
-        result[1][key] = normal;
+        const [normal, observables] = partitionObjectDeep(entries[key]);
+        result[0][key] = normal;
+        result[1][key] = observables;
       } else {
         const lastIndex = key.length - 1;
         if (key.indexOf("$") === lastIndex) {
@@ -77,7 +77,11 @@ const getValues = (
   const newValues: any = {};
   for (let key in subjects) {
     if (deepKeys.indexOf(key) === -1) {
-      newValues[key] = subjects[key]();
+      try {
+        newValues[key] = subjects[key]();
+      } catch (err) {
+        throw new Error(`key "${key}"" is undefined or not a function (key of ${JSON.stringify(subjects)})`);
+      }
     } else {
       newValues[key] = getValues(subjects[key] as Subject<any>, []);
     }
@@ -91,8 +95,8 @@ export const mlynify = <T extends Record<string, any>, Keys extends readonly str
   deepKeys: Keys
 ) =>
   seal((props: Reactify<T, Keys>) => {
-    const forceUpdate$ = useSubject(0);
-    useSubjectValue(forceUpdate$);
+    const [, forceUpdate$] = useState(0);
+    // useSubjectValue(forceUpdate$);
     const partitioned = useMemo(() => partitionObjectDeep(props, deepKeys), []);
     const [plainProps, mlynProps] = partitioned;
     const [mlynState, setMlynState] = useState(getValues(mlynProps, deepKeys));
@@ -104,7 +108,7 @@ export const mlynify = <T extends Record<string, any>, Keys extends readonly str
     useMlynEffect(() => {
       getChlid();
       muteScope(() => {
-        forceUpdate$(forceUpdate$() + 1);
+        forceUpdate$(v => v + 1);
       });
     });
     useMlynEffect(() => {

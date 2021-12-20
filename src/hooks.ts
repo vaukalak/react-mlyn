@@ -12,7 +12,10 @@ export const useSubject = <T>(initialValue: T): Subject<T> => {
 };
 
 export const useMlynEffect = (callback: (() => void) | (() => Function)) => {
-  useEffect(() => runInReactiveScope(callback), []); // no dependencies, run only once
+  useEffect(
+    () => runInReactiveScope(callback),
+    []
+  ); // no dependencies, run only once
 };
 
 /**
@@ -51,10 +54,10 @@ export const useProjectArray = <T extends any, R extends any = T>(
   array$: Subject<T[]>,
   projection: (array: Subject<T[]>) => R[],
   getKey: (item: T | R) => string,
-  bindBack?: (item: R, keyToIndex: Record<string, number>) => void,
+  // bindBack?: (item: R, keyToIndex: Record<string, number>) => void,
 ) => {
   const [result, scopeDestroyer] = useMemo(
-    () => projectArray(array$, projection, getKey, bindBack),
+    () => projectArray(array$, projection, getKey),
     []
   );
   useEffect(() => scopeDestroyer, []);
