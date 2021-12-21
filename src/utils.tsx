@@ -45,35 +45,35 @@ export const partitionObjectDeep = (
 ) =>
   Object.keys(entries).reduce(
     (result, key) => {
-      if (deepKeys.indexOf(key) !== -1) {
-        const [normal, observables] = partitionObjectDeep(entries[key]);
-        result[0][key] = normal;
-        result[1][key] = observables;
-      } else {
+      // if (deepKeys.indexOf(key) !== -1) {
+      //   const [normal, observables] = partitionObjectDeep(entries[key]);
+      //   result[0][key] = normal;
+      //   result[1][key] = observables;
+      // } else {
         const lastIndex = key.length - 1;
         if (key.indexOf("$") === lastIndex) {
           result[1][key.substr(0, lastIndex)] = entries[key];
         } else {
           result[0][key] = entries[key];
         }
-      }
+      // }
       return result;
     },
     [{} as any, {} as any]
   );
 
 const mergeDeep = (base: any, override: any, deepKeys: readonly any[]) => {
-  const deepOverride = deepKeys.reduce((acc, nextKey) => {
-    acc[nextKey] = {
-      ...base[nextKey],
-      ...override[nextKey],
-    };
-    return acc;
-  }, {});
+  // const deepOverride = deepKeys.reduce((acc, nextKey) => {
+  //   acc[nextKey] = {
+  //     ...base[nextKey],
+  //     ...override[nextKey],
+  //   };
+  //   return acc;
+  // }, {});
   return {
     ...base,
     ...override,
-    ...deepOverride,
+    // ...deepOverride,
   };
 };
 
@@ -87,7 +87,7 @@ const getValues = (
 ) => {
   const newValues: any = {};
   for (let key in subjects) {
-    if (deepKeys.indexOf(key) === -1) {
+    // if (deepKeys.indexOf(key) === -1) {
       try {
         newValues[key] = subjects[key]();
       } catch (err) {
@@ -97,9 +97,9 @@ const getValues = (
           )})`
         );
       }
-    } else {
-      newValues[key] = getValues(subjects[key] as Subject<any>, []);
-    }
+    // } else {
+    //   newValues[key] = getValues(subjects[key] as Subject<any>, []);
+    // }
   }
 
   return newValues;
@@ -118,10 +118,10 @@ export const useObervableValue = <T extends any>(observable: () => T): T => {
   const forceUpdate = useForceUpdate();
   const destroyScope = useMemo(() => {
     return runInReactiveScope(() => {
+      const newValue = observable();
       if (ref.current === unitialized) {
-        ref.current = observable();
+        ref.current = newValue;
       } else {
-        const newValue = observable();
         if (ref.current !== newValue) {
           ref.current = newValue;
           forceUpdate();
@@ -129,11 +129,7 @@ export const useObervableValue = <T extends any>(observable: () => T): T => {
       }
     });
   }, []);
-  useEffect(() => {
-    return () => {
-      destroyScope();
-    };
-  }, []);
+  useEffect(() => destroyScope, []);
   return ref.current;
 };
 
@@ -147,18 +143,86 @@ export const mlynify = <
   seal((props: Reactify<T, Keys>) => {
     // const [, forceUpdate$] = useState(0);
     // useSubjectValue(forceUpdate$);
-    const partitioned = useMemo(() => partitionObjectDeep(props, deepKeys), []);
+    const partitioned = useMemo(() => {
+      // const { children, ...rest } = props;
+      return partitionObjectDeep(props, deepKeys);
+    }, []);
     const [plainProps, mlynProps] = partitioned;
-    const mlynState = useObervableValue(() => getValues(mlynProps, deepKeys));
+    const mergedProps = useObervableValue(() => {
+      const mlynState = getValues(mlynProps, deepKeys);
+      // console.log(">>> plainProps:", plainProps);
+      // console.log(">>> mlynProps:", mlynProps);
+      // return mergeDeep(plainProps, mlynState, deepKeys);
+      return { ...plainProps, ...mlynState };
+    });
     const child = useObervableValue(() => {
-      return typeof plainProps.children === "function"
-        ? plainProps.children()
-        : plainProps.children;
+      return typeof props.children === "function"
+        ? props.children()
+        : props.children;
     });
     return (
-      <Component {...mergeDeep(plainProps, mlynState, deepKeys)}>
+      <Component {...mergedProps}>
         {child}
       </Component>
+    );
+  });
+
+const emptyArray = [];
+export const mlynify2 = (tag: string) =>
+  seal((props: any) => {
+    const forceUpdate = useForceUpdate();
+    const { current } = useRef({
+      firstRun: true,
+      state: unitialized,
+      destroyStateScope: undefined,
+      destroyChildScope: undefined,
+      prototype: undefined,
+      child: unitialized,
+    });
+    if (current.firstRun) {
+      current.firstRun = false;
+      const [plainProps, mlynProps] = partitionObjectDeep(props, emptyArray);
+      current.prototype = React.createElement(tag, plainProps);
+      current.destroyStateScope = runInReactiveScope(() => {
+        const newValue = getValues(mlynProps, emptyArray);
+        if (current.state === unitialized) {
+          current.state = newValue;
+        } else {
+          if (current.state !== newValue) {
+            current.state = newValue;
+            forceUpdate();
+          }
+        }
+      });
+      if (typeof props.children === "function") {
+        current.destroyChildScope = runInReactiveScope(() => {
+          const newValue = props.children();
+          if (current.child === unitialized) {
+            current.child = newValue;
+          } else {
+            if (current.child !== newValue) {
+              current.child = newValue;
+              forceUpdate();
+            }
+          }
+        });
+      } else {
+        current.child = props.children;
+      }
+    }
+    useEffect(() => {
+      return () => {
+        current.destroyStateScope();
+        if (current.destroyChildScope) {
+          current.destroyChildScope();
+        }
+      };
+    }, emptyArray);
+    // console.log(">>> current.child:", current.child);
+    return React.cloneElement(
+      current.prototype,
+      current.state,
+      current.child,
     );
   });
 

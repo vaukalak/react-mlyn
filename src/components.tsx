@@ -112,41 +112,43 @@ export const For = seal(<T extends any>(props: Props<T>) => {
   const { each, children, getKey } = props;
   const updateClosure = useMemo(() => {
     let renderItems = [];
-    let changed = false;
     return () => {
+      let changed = false;
       /**
        * - iterate over the array
        * - we have map of extracted key => renderIndex
        * - when we detect change
        */
       const itemsData = each();
-      const newRenderItems = [...renderItems];
       for (let i = 0; i < itemsData.length; i++) {
-        if (i >= newRenderItems.length) {
+        if (i >= renderItems.length) {
+          if (!changed) {
+            renderItems = renderItems.slice();
+            changed = true;
+          }
           const subj$ = createSubject(itemsData[i]);
-          newRenderItems[i] = {
+          renderItems[i] = {
             subj$,
-            Item: () => children(subj$, createSubject(i)),
+            Item: seal(() => children(subj$, createSubject(i))),
             // getKey: () => getKey(itemsData[i], i),
             key: i,
           }
-          changed = true;
         } else {
           // @ts-ignore
-          if (newRenderItems[i].subj$.__curried !== itemsData[i]) {
-            newRenderItems[i].subj$(itemsData[i]);
+          if (renderItems[i].subj$.__curried !== itemsData[i]) {
+            renderItems[i].subj$(itemsData[i]);
           }
         }
       }
       // something has been removed
-      if (itemsData.length < newRenderItems.length) {
-        newRenderItems.length = itemsData.length;
-        changed = true;
+      if (itemsData.length < renderItems.length) {
+        if (!changed) {
+          renderItems = renderItems.slice();
+          changed = true;
+        }
+        renderItems.length = itemsData.length;
       }
 
-      if (changed) {
-        renderItems = newRenderItems;
-      }
       return renderItems;
     };
   }, []);

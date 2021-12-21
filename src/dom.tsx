@@ -1,6 +1,6 @@
 import { PrimitiveSubject } from "mlyn";
 import React from "react";
-import { seal, mlynify } from "./utils";
+import { seal, mlynify, mlynify2 } from "./utils";
 
 const domDeepProps = ["style"] as const;
 
@@ -106,14 +106,23 @@ const td = mlynify(
   domDeepProps,
 );
 
+const a2 = mlynify2("a");
+
+const tr2 = mlynify2("tr");
+
+const td2 = mlynify2("td");
+
 export const Mlyn: {
   div: typeof div;
   input: typeof input;
   span: typeof span;
   a: typeof a;
+  a2: any;
   table: typeof table;
   tr: typeof tr;
+  tr2: any;
   td: typeof td;
+  td2: any;
   textarea: typeof textarea;
   select: typeof select;
 } = {
@@ -121,9 +130,12 @@ export const Mlyn: {
   input,
   span,
   a,
+  a2,
   table,
   tr,
+  tr2,
   td,
+  td2,
   textarea,
   select,
 };
