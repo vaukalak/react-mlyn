@@ -1,4 +1,10 @@
-import React, { useState, FunctionComponent, useMemo, useEffect, useRef } from "react";
+import React, {
+  useState,
+  FunctionComponent,
+  useMemo,
+  useEffect,
+  useRef,
+} from "react";
 import { Subject, PrimitiveSubject, muteScope, runInReactiveScope } from "mlyn";
 import { useMlynEffect } from "./hooks";
 import { useSubject, useSubjectValue } from ".";
@@ -28,11 +34,15 @@ type DeepProps<T, DeepKeys extends keyof T> = {
   [K in keyof Pick<T, DeepKeys> as `${string & K}$`]: RactiveSubProps<T[K]>;
 };
 
-type Reactify<T extends Record<string, any>, DeepKeys extends readonly string[]> = T &
-  DeepProps<T, ValueOf<DeepKeys>> &
-  RactiveProps<T, ValueOf<DeepKeys>>;
+type Reactify<
+  T extends Record<string, any>,
+  DeepKeys extends readonly string[]
+> = T & DeepProps<T, ValueOf<DeepKeys>> & RactiveProps<T, ValueOf<DeepKeys>>;
 
-export const partitionObjectDeep = (entries: any, deepKeys: readonly any[] = []) =>
+export const partitionObjectDeep = (
+  entries: any,
+  deepKeys: readonly any[] = []
+) =>
   Object.keys(entries).reduce(
     (result, key) => {
       if (deepKeys.indexOf(key) !== -1) {
@@ -67,8 +77,9 @@ const mergeDeep = (base: any, override: any, deepKeys: readonly any[]) => {
   };
 };
 
-export const seal = <P extends object>(Component: (props: P) => React.ReactElement) =>
-  React.memo(Component, () => true) as (props: P) => React.ReactElement;
+export const seal = <P extends object>(
+  Component: (props: P) => React.ReactElement
+) => React.memo(Component, () => true) as (props: P) => React.ReactElement;
 
 const getValues = (
   subjects: { [key: string]: () => any },
@@ -80,7 +91,11 @@ const getValues = (
       try {
         newValues[key] = subjects[key]();
       } catch (err) {
-        throw new Error(`key "${key}"" is undefined or not a function (key of ${JSON.stringify(subjects)})`);
+        throw new Error(
+          `key "${key}"" is undefined or not a function (key of ${JSON.stringify(
+            subjects
+          )})`
+        );
       }
     } else {
       newValues[key] = getValues(subjects[key] as Subject<any>, []);
@@ -94,28 +109,38 @@ const unitialized = {};
 
 const useForceUpdate = () => {
   const [, forceUpdate] = useState(0);
-  return () => forceUpdate(v => v + 1);
-}
+  return () => forceUpdate((v) => v + 1);
+};
 
-const useObervableValue = <T extends any>(observable: () => T): T => {
+export const useObervableValue = <T extends any>(observable: () => T): T => {
   // @ts-ignore
   const ref = useRef<T>(unitialized);
   const forceUpdate = useForceUpdate();
-  const destroyScope = useMemo(() => runInReactiveScope(() => {
-    if (ref.current === unitialized) {
-      ref.current = observable();
-    } else {
-      ref.current = observable();
-      forceUpdate();
-    }
-  }), []);
+  const destroyScope = useMemo(() => {
+    return runInReactiveScope(() => {
+      if (ref.current === unitialized) {
+        ref.current = observable();
+      } else {
+        const newValue = observable();
+        if (ref.current !== newValue) {
+          ref.current = newValue;
+          forceUpdate();
+        }
+      }
+    });
+  }, []);
   useEffect(() => {
-    destroyScope();
-  })
+    return () => {
+      destroyScope();
+    };
+  }, []);
   return ref.current;
-}
+};
 
-export const mlynify = <T extends Record<string, any>, Keys extends readonly string[]>(
+export const mlynify = <
+  T extends Record<string, any>,
+  Keys extends readonly string[]
+>(
   Component: React.FC<T>,
   deepKeys: Keys
 ) =>
@@ -124,11 +149,11 @@ export const mlynify = <T extends Record<string, any>, Keys extends readonly str
     // useSubjectValue(forceUpdate$);
     const partitioned = useMemo(() => partitionObjectDeep(props, deepKeys), []);
     const [plainProps, mlynProps] = partitioned;
-    const mlynState = getValues(mlynProps, deepKeys);
+    const mlynState = useObervableValue(() => getValues(mlynProps, deepKeys));
     const child = useObervableValue(() => {
       return typeof plainProps.children === "function"
-      ? plainProps.children()
-      : plainProps.children;
+        ? plainProps.children()
+        : plainProps.children;
     });
     return (
       <Component {...mergeDeep(plainProps, mlynState, deepKeys)}>

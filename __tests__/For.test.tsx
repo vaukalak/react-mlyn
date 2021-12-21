@@ -24,9 +24,9 @@ test("add / remove entries", async () => {
     </For>
   );
   expect(mapChildren(container)).toEqual(["a", "b", "c"]);
-  items$([...items$(), "d"]);
+  act(() => { items$([...items$(), "d"]) });
   expect(mapChildren(container)).toEqual(["a", "b", "c", "d"]);
-  items$(items$().slice(1));
+  act(() => { items$(items$().slice(1)) });
   expect(mapChildren(container)).toEqual(["b", "c", "d"]);
 });
 
