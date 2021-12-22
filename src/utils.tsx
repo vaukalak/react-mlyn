@@ -41,44 +41,33 @@ type Reactify<
 
 export const partitionObjectDeep = (
   entries: any,
-) => {
-  const plain = {};
-  const mlyn = {};
-  for (let key in entries) {
-    const lastIndex = key.length - 1;
-    if (key.indexOf("$") === lastIndex) {
-      mlyn[key.substr(0, lastIndex)] = entries[key];
-    } else {
-      plain[key] = entries[key];
-    } 
-  }
-  return [plain, mlyn];
-}
-  // Object.keys(entries).reduce(
-  //   (result, key) => {
-  //       const lastIndex = key.length - 1;
-  //       if (key.indexOf("$") === lastIndex) {
-  //         result[1][key.substr(0, lastIndex)] = entries[key];
-  //       } else {
-  //         result[0][key] = entries[key];
-  //       }
-  //     return result;
-  //   },
-    
-  // );
+) =>
+  Object.keys(entries).reduce(
+    (result, key) => {
+        const lastIndex = key.length - 1;
+        if (key.charAt(lastIndex) === "$") {
+          result[1][key.substr(0, lastIndex)] = entries[key];
+        } else {
+          result[0][key] = entries[key];
+        }
+      return result;
+    },
+    [{} as any, {} as any]
+  );
 
   export const getMlynProps = (
     entries: any,
-  ) => {
-    const res = {};
-    for (let key in entries) {
-      const lastIndex = key.length - 1;
-      if (key.indexOf("$") === lastIndex) {
-        res[key.substr(0, lastIndex)] = entries[key];
-      }
-    }
-    return res;
-  }
+  ) =>
+    Object.keys(entries).reduce(
+      (result, key) => {
+          const lastIndex = key.length - 1;
+          if (key.charAt(lastIndex) === "$") {
+            result[key.substr(0, lastIndex)] = entries[key];
+          }
+        return result;
+      },
+      {}
+    );
   
 
 const mergeDeep = (base: any, override: any, deepKeys: readonly any[]) => {

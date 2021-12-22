@@ -19,84 +19,6 @@ interface ShowProps {
   children: () => React.ReactElement;
 }
 
-// useMlynEffect(() => {
-//     const newItems = each();
-//     if (block) {
-//       block = false;
-//       return;
-//     }
-//     let update = false;
-//     const oldLength = itemsRef.current.length;
-//     const notInvoked = { ...cache };
-//     itemsRef.current = newItems.map((item, i) => {
-//       let key;
-//       key = getKey(item, i);
-//       delete notInvoked[key];
-//       const cachedItem = cache[key];
-//       if (cachedItem) {
-//         block = true;
-//         batch(() => {
-//           let oladItem;
-//           let oladIndex;
-//           muteScope(() => {
-//             oladItem = cachedItem.item$();
-//             oladIndex = cachedItem.index$();
-//           });
-//           if (cachedItem.item$() !== item) {
-//             cachedItem.item$(item);
-//           }
-//           if (cachedItem.index$() !== i) {
-//             update = true;
-//             cachedItem.index$(i);
-//           }
-//         });
-//         block = false;
-//         return cache[key];
-//       }
-
-//       const item$ = createSubject(newItems[i]);
-//       const index$ = createSubject(i);
-//       const Wrapped = seal(() => children(item$, index$));
-//       let disposer;
-//       muteScope(() => {
-//         let firstRun = true;
-//         disposer = runInReactiveScope(() => {
-//           const updatedValue = item$();
-//           if (firstRun) {
-//             firstRun = false;
-//             return;
-//           }
-//           muteScope(() => {
-//             block = true;
-//             if (
-//               getKey(each[index$()](), index$()) ===
-//               getKey(updatedValue, index$())
-//             ) {
-//               each[index$()](updatedValue);
-//             }
-//             block = false;
-//           });
-//         });
-//       });
-//       cache[key] = {
-//         disposer,
-//         key,
-//         item$,
-//         index$,
-//         Wrapped,
-//       };
-//       update = true;
-//       return cache[key];
-//     });
-//     for (let nKey in notInvoked) {
-//       delete cache[nKey];
-//       notInvoked[nKey].disposer();
-//     }
-//     if (update || oldLength !== newItems.length) {
-//       forceUpdate$(v => v + 1);
-//     }
-//   });
-
 export const Show = seal(({ when, children }: ShowProps) => {
   const visible = useCompute(() => Boolean(when()));
   return visible && children();
@@ -105,54 +27,108 @@ export const Show = seal(({ when, children }: ShowProps) => {
 interface Props<T> {
   each: Subject<T[]>;
   children(item: Subject<T>, index: Subject<number>): React.ReactElement;
-  getKey(item: T, index: number): string;
 }
 
 export const For = seal(<T extends any>(props: Props<T>) => {
-  const { each, children, getKey } = props;
+  const { each, children } = props;
   const updateClosure = useMemo(() => {
     let renderItems = [];
+    let prevItems = [];
     return () => {
-      let changed = false;
       /**
        * - iterate over the array
        * - we have map of extracted key => renderIndex
        * - when we detect change
        */
-      const itemsData = each();
-      for (let i = 0; i < itemsData.length; i++) {
-        if (i >= renderItems.length) {
-          if (!changed) {
-            renderItems = renderItems.slice();
-            changed = true;
-          }
-          const subj$ = createSubject(itemsData[i]);
+      const newItems = each();
+      let suffix = [];
+
+      let changesStart: number;
+      let end;
+      let changesEnd;
+      const prevLen = prevItems.length;
+      const newLen = newItems.length;
+      if (newLen === 0) {
+        renderItems = [];
+      } else if (prevLen === 0) {
+        renderItems = new Array(newLen);
+        for (let i = 0; i < newLen; i++) {
+          const subj$ = createSubject(newItems[i]);
           renderItems[i] = {
             subj$,
             Item: seal(() => children(subj$, createSubject(i))),
-            // getKey: () => getKey(itemsData[i], i),
             key: i,
-          }
-        } else {
-          // @ts-ignore
-          if (renderItems[i].subj$.__curried !== itemsData[i]) {
-            renderItems[i].subj$(itemsData[i]);
-          }
+          };
         }
-      }
-      // something has been removed
-      if (itemsData.length < renderItems.length) {
-        if (!changed) {
-          renderItems = renderItems.slice();
-          changed = true;
-        }
-        renderItems.length = itemsData.length;
-      }
+      } else if (prevLen !== newLen) {
 
+        for (
+          changesStart = 0, end = Math.min(prevLen, newLen);
+          changesStart < end && prevItems[changesStart] === newItems[changesStart];
+          changesStart++
+        );
+  
+        // console.log(">>> changesStart:", changesStart);
+        // console.log(">>> prevItems:", prevItems);
+        // console.log(">>> newItems:", newItems);
+        // common suffix
+        for (
+          end = prevLen - 1, changesEnd = newLen - 1;
+          end >= changesStart && changesEnd >= changesStart && prevItems[end] === newItems[changesEnd];
+          end--, changesEnd--
+        ) {
+          // console.log(">>> changesEnd e", changesEnd)
+          // suffix[changesEnd] = renderItems[end];
+          // suffix.unshift(renderItems[end]);
+        }
+        suffix = renderItems.slice(end + 1);
+  
+        // console.log(">>> changesEnd:", changesEnd);
+        // console.log(">>> suffix.length:", suffix.length);
+
+        const mid = renderItems.slice(changesStart + 1, -suffix.length);
+        // console.log(">>> mid:", mid);
+        for (let i = changesStart; i < newLen-suffix.length; i++) {
+          let j = i - changesStart;
+          // console.log(">>> j: ", j);
+          if (j >= mid.length) {
+            const subj$ = createSubject(newItems[i]);
+            mid[j] = {
+              subj$,
+              Item: seal(() => children(subj$, createSubject(i))),
+              key: i,
+            };
+          } else {
+            // @ts-ignore
+            if (mid[j].subj$.__curried !== newItems[j]) {
+              mid[j].subj$(newItems[j]);
+            }
+          }
+        }
+
+        // console.log(">>> mid2:", mid);
+
+        prevItems = newItems;
+        if (changesStart > 0) {
+          renderItems = renderItems.slice(0, changesStart).concat(mid, suffix);
+        } else {
+          renderItems = mid.concat(suffix);
+        }
+        
+      } else {
+        
+        for (let i = 0; i < newLen; i++) {
+          // @ts-ignore
+          if (renderItems[i].subj$.__curried !== newItems[i]) {
+            renderItems[i].subj$(newItems[i]);
+          }
+        }
+      }
       return renderItems;
     };
   }, []);
   const items = useObervableValue(updateClosure);
+  // console.log(">>> items:", items);
   return (
     <>
       {items.map(({ Item, key }) => <Item key={key} />)}

@@ -16,7 +16,7 @@ test("displays entries", async () => {
   expect(mapChildren(container)).toEqual(["a", "b", "c"]);
 });
 
-test("add / remove entries", async () => {
+test("add entries", async () => {
   const items$ = createSubject(["a", "b", "c"]);
   const { container } = render(
     <For each={items$} getKey={(e) => e}>
@@ -26,8 +26,32 @@ test("add / remove entries", async () => {
   expect(mapChildren(container)).toEqual(["a", "b", "c"]);
   act(() => { items$([...items$(), "d"]) });
   expect(mapChildren(container)).toEqual(["a", "b", "c", "d"]);
+  // act(() => { items$(items$().slice(1)) });
+  // expect(mapChildren(container)).toEqual(["b", "c", "d"]);
+});
+
+test("remove first entry", async () => {
+  const items$ = createSubject(["a", "b", "c"]);
+  const { container } = render(
+    <For each={items$} getKey={(e) => e}>
+      {(e$) => <div>{e$()}</div>}
+    </For>
+  );
+  expect(mapChildren(container)).toEqual(["a", "b", "c"]);
   act(() => { items$(items$().slice(1)) });
-  expect(mapChildren(container)).toEqual(["b", "c", "d"]);
+  expect(mapChildren(container)).toEqual(["b", "c"]);
+});
+
+test("remove mid entry", async () => {
+  const items$ = createSubject(["a", "b", "c"]);
+  const { container } = render(
+    <For each={items$} getKey={(e) => e}>
+      {(e$) => <div>{e$()}</div>}
+    </For>
+  );
+  expect(mapChildren(container)).toEqual(["a", "b", "c"]);
+  act(() => { items$([...items$().slice(0,1), ...items$().slice(2)]) });
+  expect(mapChildren(container)).toEqual(["a", "c"]);
 });
 
 const idGen = () => {
