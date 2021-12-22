@@ -11,9 +11,10 @@ export const useSubject = <T>(initialValue: T): Subject<T> => {
   return useMemo(() => createSubject<T>(initialValue), []) as Subject<T>;
 };
 
-export const useMlynEffect = (callback: (() => void) | (() => Function)) => {
+export const useMlynEffect = (callback: (() => void) | (() => Function), consistent: boolean = false) => {
   useEffect(
-    () => runInReactiveScope(callback),
+    // @ts-ignore
+    () => runInReactiveScope(callback, consistent),
     []
   ); // no dependencies, run only once
 };
@@ -23,12 +24,12 @@ export const useMlynEffect = (callback: (() => void) | (() => Function)) => {
  * @param cb
  * @returns
  */
-export const useMemoize = <T extends any>(cb: () => T) => {
+export const useMemoize = <T extends any>(cb: () => T, consistent: boolean = false) => {
   const subject$ = useSubject<T>(cb());
   useMlynEffect(() => {
     const newValue = cb();
     subject$(newValue);
-  });
+  }, consistent);
   return () => subject$();
 };
 
