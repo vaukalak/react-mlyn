@@ -72,3 +72,53 @@ test("update entries", async () => {
   act(() => { items$[1].v("d") });
   expect(mapChildren(container)).toEqual(["a", "b", "c"]);
 });
+
+test("indexes updated on remove", async () => {
+  const id = idGen();
+  const item = (v) => ({ v, id: id() });
+  const items$ = createSubject([item("a"), item("b")]);
+  const { container } = render(
+    <For each={items$}>
+      {(e$, i$) => <Mlyn.Div>{i$}</Mlyn.Div>}
+    </For>
+  );
+  expect(mapChildren(container)).toEqual(["0", "1"]);
+  act(() => { items$(items$().slice(1)) });
+  expect(mapChildren(container)).toEqual(["0"]);
+});
+
+test("remove only entry", async () => {
+  const id = idGen();
+  const item = (v) => ({ v, id: id() });
+  const items$ = createSubject([item("a"), item("b")]);
+  const { container } = render(
+    <For each={items$}>
+      {(e$) => <Mlyn.Div>{e$.v()}</Mlyn.Div>}
+    </For>
+  );
+  expect(mapChildren(container)).toEqual(["a", "b"]);
+  act(() => { items$(items$().slice(1)) });
+  expect(mapChildren(container)).toEqual(["b"]);
+  act(() => { items$(items$().slice(1)) });
+  expect(mapChildren(container)).toEqual([]);
+});
+
+test("bindback", async () => {
+  const id = idGen();
+  const item = (v) => ({ v, id: id() });
+  const items$ = createSubject([item("a")]);
+  let onClick;
+  const { container } = render(
+    <For each={items$}>
+      {(e$) => {
+        onClick = () => e$.v("b");
+        return <Mlyn.Div>{e$.v}</Mlyn.Div>
+      }}
+    </For>
+  );
+  expect(mapChildren(container)).toEqual(["a"]);
+
+  act(() => { onClick() });
+  expect(mapChildren(container)).toEqual(["b"]);
+  expect(items$()[0].v).toEqual("b");
+});

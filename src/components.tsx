@@ -38,22 +38,27 @@ export const For = seal(<T extends any>(props: Props<T>) => {
       const newLen = newItems.length;
       if (newLen === 0) {
         if (bindBack) {
-          renderItems.forEach(entry => entry.backScope.destroy());
+          renderItems.forEach((entry) => entry.backScope.destroy());
         }
         renderItems = [];
       } else if (prevLen === 0) {
         renderItems = [];
         for (let i = 0; i < newLen; i++) {
           const subj$ = createSubject(newItems[i]);
+          const index$ = createSubject(i);
           renderItems.push({
             subj$,
-            Item: seal(() => children(subj$, createSubject(i))),
+            index$,
+            Item: seal(() => children(subj$, index$)),
             key: i,
-            backScope: bindBack && runInReactiveScope(() => {
-              if (!rendering) {
-                each[i](subj$());
-              }
-            }),
+            backScope:
+              bindBack &&
+              runInReactiveScope(() => {
+                const newValue = subj$();
+                if (!rendering) {
+                  each[i](newValue);
+                }
+              }),
           });
         }
       } else if (prevLen !== newLen) {
@@ -71,14 +76,14 @@ export const For = seal(<T extends any>(props: Props<T>) => {
           changesEnd >= changesStart &&
           prevItems[end] === newItems[changesEnd];
           end--, changesEnd--
-        ) {
-        }
+        ) {}
         suffix = renderItems.slice(end + 1);
 
         const midStart = changesStart + 1;
         const mid = renderItems.slice(midStart, -suffix.length);
         const newMidEnd = newLen - suffix.length;
         const prevMidEnd = prevLen - suffix.length;
+        // dispose scopes for bind back items
         if (bindBack) {
           for (let i = newMidEnd; i < prevMidEnd; i++) {
             renderItems[i].backScope.destroy();
@@ -88,15 +93,20 @@ export const For = seal(<T extends any>(props: Props<T>) => {
           let j = i - changesStart;
           if (j >= mid.length) {
             const subj$ = createSubject(newItems[i]);
+            const index$ = createSubject(i);
             mid[j] = {
               subj$,
-              Item: seal(() => children(subj$, createSubject(i))),
+              index$,
+              Item: seal(() => children(subj$, index$)),
               key: i,
-              backScope: bindBack && runInReactiveScope(() => {
-                if (!rendering) {
-                  each[i](subj$());
-                }
-              }),
+              backScope:
+                bindBack &&
+                runInReactiveScope(() => {
+                  const newValue = subj$();
+                  if (!rendering) {
+                    each[i](newValue);
+                  }
+                }),
             };
           } else {
             // @ts-ignore
@@ -105,11 +115,16 @@ export const For = seal(<T extends any>(props: Props<T>) => {
             }
           }
         }
-        
+
         if (changesStart > 0) {
           renderItems = renderItems.slice(0, changesStart).concat(mid, suffix);
         } else {
           renderItems = mid.concat(suffix);
+        }
+
+        // update indexes for suffix
+        for (let i = newMidEnd; i < newLen; i++) {
+          renderItems[i].index$(i);
         }
       } else {
         // len is not changed, just update
