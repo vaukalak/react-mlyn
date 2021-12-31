@@ -14,21 +14,20 @@ export const Show = seal(({ when, children }: ShowProps) => {
 });
 
 interface Props<T> {
+  noBindBack?: boolean;
   each: Subject<T[]>;
   children(item: Subject<T>, index: Subject<number>): React.ReactElement;
 }
 
 export const For = seal(<T extends any>(props: Props<T>) => {
-  const { each, children } = props;
+  const { each, children, noBindBack } = props;
+  const bindBack = !noBindBack;
   const updateClosure = useMemo(() => {
     let renderItems = [];
     let prevItems = [];
+    let rendering = false;
     return () => {
-      /**
-       * - iterate over the array
-       * - we have map of extracted key => renderIndex
-       * - when we detect change
-       */
+      rendering = true;
       const newItems = each();
       let suffix = [];
 
@@ -38,6 +37,9 @@ export const For = seal(<T extends any>(props: Props<T>) => {
       const prevLen = prevItems.length;
       const newLen = newItems.length;
       if (newLen === 0) {
+        if (bindBack) {
+          renderItems.forEach(entry => entry.backScope.destroy());
+        }
         renderItems = [];
       } else if (prevLen === 0) {
         renderItems = [];
@@ -47,6 +49,11 @@ export const For = seal(<T extends any>(props: Props<T>) => {
             subj$,
             Item: seal(() => children(subj$, createSubject(i))),
             key: i,
+            backScope: bindBack && runInReactiveScope(() => {
+              if (!rendering) {
+                each[i](subj$());
+              }
+            }),
           });
         }
       } else if (prevLen !== newLen) {
@@ -68,8 +75,16 @@ export const For = seal(<T extends any>(props: Props<T>) => {
         }
         suffix = renderItems.slice(end + 1);
 
-        const mid = renderItems.slice(changesStart + 1, -suffix.length);
-        for (let i = changesStart; i < newLen - suffix.length; i++) {
+        const midStart = changesStart + 1;
+        const mid = renderItems.slice(midStart, -suffix.length);
+        const newMidEnd = newLen - suffix.length;
+        const prevMidEnd = prevLen - suffix.length;
+        if (bindBack) {
+          for (let i = newMidEnd; i < prevMidEnd; i++) {
+            renderItems[i].backScope.destroy();
+          }
+        }
+        for (let i = changesStart; i < newMidEnd; i++) {
           let j = i - changesStart;
           if (j >= mid.length) {
             const subj$ = createSubject(newItems[i]);
@@ -77,6 +92,11 @@ export const For = seal(<T extends any>(props: Props<T>) => {
               subj$,
               Item: seal(() => children(subj$, createSubject(i))),
               key: i,
+              backScope: bindBack && runInReactiveScope(() => {
+                if (!rendering) {
+                  each[i](subj$());
+                }
+              }),
             };
           } else {
             // @ts-ignore
@@ -100,7 +120,7 @@ export const For = seal(<T extends any>(props: Props<T>) => {
           }
         }
       }
-
+      rendering = false;
       prevItems = newItems;
       return renderItems;
     };

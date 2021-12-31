@@ -9,7 +9,7 @@ const mapChildren = (container) =>
 test("displays entries", async () => {
   const items$ = createSubject(["a", "b", "c"]);
   const { container } = render(
-    <For each={items$} getKey={(e) => e}>
+    <For each={items$}>
       {(e$) => <div>{e$()}</div>}
     </For>
   );
@@ -19,7 +19,7 @@ test("displays entries", async () => {
 test("add entries", async () => {
   const items$ = createSubject(["a", "b", "c"]);
   const { container } = render(
-    <For each={items$} getKey={(e) => e}>
+    <For each={items$}>
       {(e$) => <div>{e$()}</div>}
     </For>
   );
@@ -33,7 +33,7 @@ test("add entries", async () => {
 test("remove first entry", async () => {
   const items$ = createSubject(["a", "b", "c"]);
   const { container } = render(
-    <For each={items$} getKey={(e) => e}>
+    <For each={items$}>
       {(e$) => <div>{e$()}</div>}
     </For>
   );
@@ -45,7 +45,7 @@ test("remove first entry", async () => {
 test("remove mid entry", async () => {
   const items$ = createSubject(["a", "b", "c"]);
   const { container } = render(
-    <For each={items$} getKey={(e) => e}>
+    <For each={items$}>
       {(e$) => <div>{e$()}</div>}
     </For>
   );
@@ -64,8 +64,8 @@ test("update entries", async () => {
   const item = (v) => ({ v, id: id() });
   const items$ = createSubject([item("a"), item("b"), item("c")]);
   const { container } = render(
-    <For each={items$} getKey={({ id }) => id}>
-      {(e$) => <Mlyn.div>{e$.v()}</Mlyn.div>}
+    <For each={items$}>
+      {(e$) => <Mlyn.Div>{e$.v()}</Mlyn.Div>}
     </For>
   );
   expect(mapChildren(container)).toEqual(["a", "b", "c"]);
