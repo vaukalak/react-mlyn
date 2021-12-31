@@ -1,4 +1,5 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
+// import ReactCurrentOwner from "react/lib/ReactCurrentOwner";
 import {
   runInReactiveScope,
   Subject,
@@ -11,10 +12,13 @@ export const useSubject = <T>(initialValue: T): Subject<T> => {
   return useMemo(() => createSubject<T>(initialValue), []) as Subject<T>;
 };
 
-export const useMlynEffect = (callback: (() => void) | (() => Function), consistent: boolean = false) => {
+export const useMlynEffect = (callback: (() => void) | (() => Function)) => {
   useEffect(
-    // @ts-ignore
-    () => runInReactiveScope(callback, consistent),
+    () => {
+      const scope = runInReactiveScope(callback);
+      // @ts-ignore
+      return () => scope.destroy();
+    },
     []
   ); // no dependencies, run only once
 };
@@ -24,12 +28,12 @@ export const useMlynEffect = (callback: (() => void) | (() => Function), consist
  * @param cb
  * @returns
  */
-export const useMemoize = <T extends any>(cb: () => T, consistent: boolean = false) => {
+export const useMemoize = <T extends any>(cb: () => T) => {
   const subject$ = useSubject<T>(cb());
   useMlynEffect(() => {
     const newValue = cb();
     subject$(newValue);
-  }, consistent);
+  });
   return () => subject$();
 };
 
@@ -57,11 +61,11 @@ export const useProjectArray = <T extends any, R extends any = T>(
   getKey: (item: T | R) => string,
   // bindBack?: (item: R, keyToIndex: Record<string, number>) => void,
 ) => {
-  const [result, scopeDestroyer] = useMemo(
+  const [result, scope] = useMemo(
     () => projectArray(array$, projection, getKey),
     []
   );
-  useEffect(() => scopeDestroyer, []);
+  useEffect(() => scope.destroy(), []);
   return result as Subject<T[]>;
 };
 
@@ -85,6 +89,39 @@ export const useCompute = <T>(callback: () => T): T => {
  */
 export const useSubjectValue = <T>(subject: Subject<T>): T => {
   return useCompute(() => subject());
+};
+
+export const useForceUpdate = () => {
+  const [, forceUpdate] = useState(0);
+  return () => forceUpdate((v) => v + 1);
+};
+
+const unitialized = {};
+
+/**
+ * causes re-render
+ * @param observable 
+ * @returns 
+ */
+export const useObervableValue = <T extends any>(observable: () => T): T => {
+  // @ts-ignore
+  const ref = useRef<T>(unitialized);
+  const forceUpdate = useForceUpdate();
+  const scope = useMemo(() => {
+    return runInReactiveScope(() => {
+      const newValue = observable();
+      if (ref.current === unitialized) {
+        ref.current = newValue;
+      } else {
+        if (ref.current !== newValue) {
+          ref.current = newValue;
+          forceUpdate();
+        }
+      }
+    });
+  }, []);
+  useEffect(() => () => scope.destroy(), []);
+  return ref.current;
 };
 
 /**

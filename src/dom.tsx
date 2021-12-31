@@ -1,23 +1,11 @@
 import { PrimitiveSubject } from "mlyn";
 import React from "react";
-import { seal, mlynify, mlynify2 } from "./utils";
+import { seal, mlynify } from "./utils";
 
-const domDeepProps = ["style"] as const;
+const InputBase = mlynify<React.HTMLProps<HTMLInputElement>>("input");
+const TextareaBase = mlynify<React.HTMLProps<HTMLTextAreaElement>>("textarea");
+const SelectBase = mlynify<React.HTMLProps<HTMLSelectElement>>("select");
 
-const InputBase = mlynify(
-  (props: React.HTMLProps<HTMLInputElement>) => <input {...props} />,
-  domDeepProps,
-);
-
-const TextareaBase = mlynify(
-  (props: React.HTMLProps<HTMLTextAreaElement>) => <textarea {...props} />,
-  domDeepProps,
-);
-
-const SelectBase = mlynify(
-  (props: React.HTMLProps<HTMLSelectElement>) => <select {...props} />,
-  domDeepProps,
-);
 interface BindChecked {
   "bind:checked"?: PrimitiveSubject<boolean>;
   bindChecked?: PrimitiveSubject<boolean>;
@@ -59,83 +47,50 @@ const bindValue = <T extends object>(propsClone: T) => {
   return propsClone;
 };
 
-const textarea = seal((props: TextareaProps) => {
+const Textarea = seal((props: TextareaProps) => {
   const propsClone: TextareaProps = { ...props };
   bindValue<TextareaProps>(propsClone);
   return <TextareaBase {...propsClone} />;
 });
 
-const select = seal((props: SelectProps) => {
+const Select = seal((props: SelectProps) => {
   const propsClone: SelectProps = { ...props };
   bindValue<SelectProps>(propsClone);
   return <SelectBase {...propsClone} />;
 });
 
-const input = seal((props: InputProps) => {
+const Input = seal((props: InputProps) => {
   const propsClone = { ...props };
   bindValue(propsClone);
   bindChecked(propsClone);
   return <InputBase {...propsClone} />;
 });
 
-const div = mlynify(
-  (props: React.HTMLProps<HTMLDivElement>) => <div {...props} />,
-  domDeepProps,
-);
-
-const span = mlynify(
-  (props: React.HTMLProps<HTMLSpanElement>) => <span {...props} />,
-  domDeepProps,
-);
-
-const a = mlynify(
-  (props: React.HTMLProps<HTMLAnchorElement>) => <a {...props} />,
-  domDeepProps,
-);
-
-const table = mlynify(
-  (props: React.HTMLProps<HTMLTableElement>) => <table {...props} />,
-  domDeepProps,
-);
-const tr = mlynify(
-  (props: React.HTMLProps<HTMLTableRowElement>) => <tr {...props} />,
-  domDeepProps,
-);
-const td = mlynify(
-  (props: React.HTMLProps<HTMLTableCellElement>) => <td {...props} />,
-  domDeepProps,
-);
-
-const a2 = mlynify2("a");
-
-const tr2 = mlynify2("tr");
-
-const td2 = mlynify2("td");
+const Div = mlynify<React.HTMLProps<HTMLDivElement>>("div");
+const Span = mlynify<React.HTMLProps<HTMLSpanElement>>("span");
+const A = mlynify<React.HTMLProps<HTMLAnchorElement>>("a");
+const Table = mlynify<React.HTMLProps<HTMLTableElement>>("table");
+const Tr = mlynify<React.HTMLProps<HTMLTableRowElement>>("tr");
+const Td = mlynify<React.HTMLProps<HTMLTableCellElement>>("td");
 
 export const Mlyn: {
-  div: typeof div;
-  input: typeof input;
-  span: typeof span;
-  a: typeof a;
-  a2: any;
-  table: typeof table;
-  tr: typeof tr;
-  tr2: any;
-  td: typeof td;
-  td2: any;
-  textarea: typeof textarea;
-  select: typeof select;
+  Div: typeof Div;
+  Input: typeof Input;
+  Span: typeof Span;
+  A: typeof A;
+  Table: typeof Table;
+  Tr: typeof Tr;
+  Td: typeof Td;
+  Textarea: typeof Textarea;
+  Select: typeof Select;
 } = {
-  div,
-  input,
-  span,
-  a,
-  a2,
-  table,
-  tr,
-  tr2,
-  td,
-  td2,
-  textarea,
-  select,
+  Div,
+  Input,
+  Span,
+  A,
+  Table,
+  Tr,
+  Td,
+  Textarea,
+  Select,
 };
