@@ -1,4 +1,5 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
+// import ReactCurrentOwner from "react/lib/ReactCurrentOwner";
 import {
   runInReactiveScope,
   Subject,
@@ -12,7 +13,14 @@ export const useSubject = <T>(initialValue: T): Subject<T> => {
 };
 
 export const useMlynEffect = (callback: (() => void) | (() => Function)) => {
-  useEffect(() => runInReactiveScope(callback), []); // no dependencies, run only once
+  useEffect(
+    () => {
+      const scope = runInReactiveScope(callback);
+      // @ts-ignore
+      return () => scope.destroy();
+    },
+    []
+  ); // no dependencies, run only once
 };
 
 /**
@@ -51,13 +59,13 @@ export const useProjectArray = <T extends any, R extends any = T>(
   array$: Subject<T[]>,
   projection: (array: Subject<T[]>) => R[],
   getKey: (item: T | R) => string,
-  bindBack?: (item: R, keyToIndex: Record<string, number>) => void,
+  // bindBack?: (item: R, keyToIndex: Record<string, number>) => void,
 ) => {
-  const [result, scopeDestroyer] = useMemo(
-    () => projectArray(array$, projection, getKey, bindBack),
+  const [result, scope] = useMemo(
+    () => projectArray(array$, projection, getKey),
     []
   );
-  useEffect(() => scopeDestroyer, []);
+  useEffect(() => scope.destroy(), []);
   return result as Subject<T[]>;
 };
 
@@ -81,6 +89,39 @@ export const useCompute = <T>(callback: () => T): T => {
  */
 export const useSubjectValue = <T>(subject: Subject<T>): T => {
   return useCompute(() => subject());
+};
+
+export const useForceUpdate = () => {
+  const [, forceUpdate] = useState(0);
+  return () => forceUpdate((v) => v + 1);
+};
+
+const unitialized = {};
+
+/**
+ * causes re-render
+ * @param observable 
+ * @returns 
+ */
+export const useObervableValue = <T extends any>(observable: () => T): T => {
+  // @ts-ignore
+  const ref = useRef<T>(unitialized);
+  const forceUpdate = useForceUpdate();
+  const scope = useMemo(() => {
+    return runInReactiveScope(() => {
+      const newValue = observable();
+      if (ref.current === unitialized) {
+        ref.current = newValue;
+      } else {
+        if (ref.current !== newValue) {
+          ref.current = newValue;
+          forceUpdate();
+        }
+      }
+    });
+  }, []);
+  useEffect(() => () => scope.destroy(), []);
+  return ref.current;
 };
 
 /**
