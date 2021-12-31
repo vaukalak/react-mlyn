@@ -65,7 +65,7 @@ export const useProjectArray = <T extends any, R extends any = T>(
     () => projectArray(array$, projection, getKey),
     []
   );
-  useEffect(() => scope.destroy(), []);
+  useEffect(() => () => scope.destroy(), []);
   return result as Subject<T[]>;
 };
 
