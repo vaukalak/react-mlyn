@@ -72,10 +72,12 @@ const A = mlynify<React.HTMLProps<HTMLAnchorElement>>("a");
 const Table = mlynify<React.HTMLProps<HTMLTableElement>>("table");
 const Tr = mlynify<React.HTMLProps<HTMLTableRowElement>>("tr");
 const Td = mlynify<React.HTMLProps<HTMLTableCellElement>>("td");
+const Button = mlynify<React.HTMLProps<HTMLButtonElement>>("button");
 
 export const Mlyn: {
   Div: typeof Div;
   Input: typeof Input;
+  Button: typeof Button;
   Span: typeof Span;
   A: typeof A;
   Table: typeof Table;
@@ -86,6 +88,7 @@ export const Mlyn: {
 } = {
   Div,
   Input,
+  Button,
   Span,
   A,
   Table,
