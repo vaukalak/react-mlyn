@@ -23,6 +23,7 @@ npm i -S react-mlyn mlyn
 - [Simple TodoMVC app](https://codesandbox.io/s/react-mlyn-todo-mvc-owecw)
 - [Advanced TodoMVC app](https://codesandbox.io/s/react-mlyn-todo-mvc-with-filters-i5e7j)
 - [Currency conversion calculator](https://codesandbox.io/s/mlyn-currency-converter-t5w0o)
+- [tic-tac game](https://codesandbox.io/s/mlyn-tic-tac-game-27c6r)
 
 ## Quick start
 
@@ -35,11 +36,11 @@ const App = seal(() => {
   return (
     <div>
       <div>First name:</div>
-      <Mlyn.input bindValue={firstName$} />
+      <Mlyn.Input bindValue={firstName$} />
       <div>Last name:</div>
-      <Mlyn.input bindValue={lastName$} />
+      <Mlyn.Input bindValue={lastName$} />
       <div>Full name:</div>
-      <Mlyn.div>{() => `${firstName$()} ${lastName$()}`}</Mlyn.div>
+      <Mlyn.Div>{() => `${firstName$()} ${lastName$()}`}</Mlyn.Div>
     </div>
   );
 });
@@ -67,8 +68,8 @@ Used to display a collection of elements, by providing items to render and key e
 <For each={state$.todos} getKey={({ createdAt }) => createdAt}>
   {(todo$, index$) => (
     <div>
-      <Mlyn.input type="checkbox" bindChecked={todo$.done} />
-      <Mlyn.input bindValue={todo$.title} />
+      <Mlyn.Input type="checkbox" bindChecked={todo$.done} />
+      <Mlyn.Input bindValue={todo$.title} />
       <button onClick={() => removeItem(index$())}>x</button>
     </div>
   )}
