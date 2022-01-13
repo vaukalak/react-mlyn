@@ -58,7 +58,8 @@ export const For = seal(<T extends any>(props: Props<T>) => {
               runInReactiveScope(() => {
                 const newValue = subj$();
                 if (!rendering) {
-                  each[i](newValue);
+                  // @ts-ignore
+                  each[index$.__value](newValue);
                 }
               }),
           });
@@ -106,7 +107,8 @@ export const For = seal(<T extends any>(props: Props<T>) => {
                 runInReactiveScope(() => {
                   const newValue = subj$();
                   if (!rendering) {
-                    each[i](newValue);
+                    // @ts-ignore
+                    each[index$.__value](newValue);
                   }
                 }),
             };

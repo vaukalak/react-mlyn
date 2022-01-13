@@ -138,3 +138,26 @@ test("bindback", async () => {
   expect(mapChildren(container)).toEqual(["b"]);
   expect(items$()[0].v).toEqual("b");
 });
+
+test("bind-back when index changed", async () => {
+  const id = idGen();
+  const item = (v) => ({ v, id: id() });
+  const a = item("a");
+  const b = item("b");
+  const items$ = createSubject([a]);
+  const bindBackCallbacks = [];
+  const { container } = render(
+    <For each={items$}>
+      {(e$, $i) => {
+        bindBackCallbacks.push(e$);
+        return <Mlyn.Div>{() => `${e$.v()}`}</Mlyn.Div>
+      }}
+    </For>
+  );
+  expect(mapChildren(container)).toEqual(["a"]);
+  act(() => { items$([b, ...items$()]) });
+  expect(mapChildren(container)).toEqual(["b", "a"]);
+  // the one which has been pushed first
+  act(() => { bindBackCallbacks[0].v("c") })
+  expect(mapChildren(container)).toEqual(["b", "c"]);
+});
