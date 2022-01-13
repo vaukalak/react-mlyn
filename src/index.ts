@@ -7,6 +7,7 @@ export {
   useSubjectValue,
   useSubjectInputBinding,
   useSubject,
+  useDestroyable,
 } from "./hooks";
 export { Show, For } from "./components";
 export { mlynify, seal, shallowCompare, compareArrays } from "./utils";

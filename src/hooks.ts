@@ -12,6 +12,16 @@ export const useSubject = <T>(initialValue: T): Subject<T> => {
   return useMemo(() => createSubject<T>(initialValue), []) as Subject<T>;
 };
 
+interface Destroyable {
+  destroy: Function;
+}
+
+export const useDestroyable = (callback: <T>() => [() => T, Destroyable]) => {
+  const [observable$, destroyable] = useMemo(callback, []);
+  useEffect(() => () => destroyable.destroy(), []);
+  return observable$;
+}
+
 export const useMlynEffect = (callback: (() => void) | (() => Function)) => {
   useEffect(
     () => {
