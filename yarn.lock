@@ -3602,10 +3602,10 @@ mixin-deep@^1.2.0:
     for-in "^1.0.2"
     is-extendable "^1.0.1"
 
-mlyn@^0.5.0:
-  version "0.5.0"
-  resolved "https://registry.yarnpkg.com/mlyn/-/mlyn-0.5.0.tgz#99c2b3aaec2644b1871432ccbbbb9e70f48463d1"
-  integrity sha512-7CIiw55/9ZO54K9Sn/dFpqlbGIvtVqFMrhe3ezsFpvL8LbEoRGi2f8BfcUaCL/84CuR5lIGhU536eew7U/jUZA==
+mlyn@^0.5.2:
+  version "0.5.2"
+  resolved "https://registry.yarnpkg.com/mlyn/-/mlyn-0.5.2.tgz#cae92be0f61a6244d53a21a1709a3abb754d0d2c"
+  integrity sha512-vtUtJ6bGluLG4e2dT0M4vUsZ+US7qqw+3jh32Av+cHcNytjN7ie0ZMbgFZjOwKq8Xfs6R6iTDCpJo/kE3CSkNQ==
 
 ms@2.0.0:
   version "2.0.0"

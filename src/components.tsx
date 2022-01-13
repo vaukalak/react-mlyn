@@ -19,6 +19,8 @@ interface Props<T> {
   children(item: Subject<T>, index: Subject<number>): React.ReactElement;
 }
 
+let uniqueKey = 0;
+
 export const For = seal(<T extends any>(props: Props<T>) => {
   const { each, children, noBindBack } = props;
   const bindBack = !noBindBack;
@@ -50,7 +52,7 @@ export const For = seal(<T extends any>(props: Props<T>) => {
             subj$,
             index$,
             Item: seal(() => children(subj$, index$)),
-            key: i,
+            key: ++uniqueKey,
             backScope:
               bindBack &&
               runInReactiveScope(() => {
@@ -78,7 +80,7 @@ export const For = seal(<T extends any>(props: Props<T>) => {
           end--, changesEnd--
         ) {}
         suffix = renderItems.slice(end + 1);
-
+        
         const midStart = changesStart + 1;
         const mid = renderItems.slice(midStart, -suffix.length);
         const newMidEnd = newLen - suffix.length;
@@ -98,7 +100,7 @@ export const For = seal(<T extends any>(props: Props<T>) => {
               subj$,
               index$,
               Item: seal(() => children(subj$, index$)),
-              key: i,
+              key: ++uniqueKey,
               backScope:
                 bindBack &&
                 runInReactiveScope(() => {

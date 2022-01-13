@@ -103,6 +103,22 @@ test("remove only entry", async () => {
   expect(mapChildren(container)).toEqual([]);
 });
 
+test("add entries to start", async () => {
+  const id = idGen();
+  const item = (v) => ({ v, id: id() });
+  const a = item("a");
+  const b = item("b");
+  const items$ = createSubject([a]);
+  const { container } = render(
+    <For each={items$}>
+      {(e$, $i) => <Mlyn.Div>{() => `${e$.v()}-${$i()}`}</Mlyn.Div>}
+    </For>
+  );
+  expect(mapChildren(container)).toEqual(["a-0"]);
+  act(() => { items$([b, ...items$()]) });
+  expect(mapChildren(container)).toEqual(["b-0", "a-1"]);
+});
+
 test("bindback", async () => {
   const id = idGen();
   const item = (v) => ({ v, id: id() });
