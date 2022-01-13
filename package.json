@@ -1,6 +1,6 @@
 {
   "name": "react-mlyn",
-  "version": "0.5.5",
+  "version": "0.5.6",
   "description": "React bindings to mlyn",
   "main": "lib/index.js",
   "types": "types/index.js",
