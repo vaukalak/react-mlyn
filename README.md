@@ -65,7 +65,7 @@ Can show / hide an element on a condition, without re-rendering host component:
 
 Used to display a collection of elements, by providing items to render and key extractor.
 ```tsx
-<For each={state$.todos} getKey={({ createdAt }) => createdAt}>
+<For each={state$.todos}>
   {(todo$, index$) => (
     <div>
       <Mlyn.Input type="checkbox" bindChecked={todo$.done} />
