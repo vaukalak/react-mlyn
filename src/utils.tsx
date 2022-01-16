@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from "react";
+import React, { memo, useEffect, useRef } from "react";
 import { runInReactiveScope } from "mlyn";
 import { useForceUpdate } from "./hooks";
 
@@ -75,7 +75,7 @@ const isNotEmpty = (o) => {
 export const mlynify = <T extends React.PropsWithChildren<object>>(
   tag: string
 ) =>
-  seal((props: Reactify2<T>) => {
+  memo((props: Reactify2<T>) => {
     const forceUpdate = useForceUpdate();
     const { current } = useRef({
       firstRun: true,
