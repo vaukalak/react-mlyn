@@ -16,13 +16,14 @@ export const Show = seal(({ when, children }: ShowProps) => {
 interface Props<T> {
   noBindBack?: boolean;
   each: Subject<T[]>;
+  getKey?: (item: T, index: number) => string;
   children(item: Subject<T>, index: Subject<number>): React.ReactElement;
 }
 
 let uniqueKey = 0;
 
 export const For = seal(<T extends any>(props: Props<T>) => {
-  const { each, children, noBindBack } = props;
+  const { each, children, noBindBack, getKey } = props;
   const bindBack = !noBindBack;
   const updateClosure = useMemo(() => {
     let renderItems = [];
@@ -52,7 +53,8 @@ export const For = seal(<T extends any>(props: Props<T>) => {
             subj$,
             index$,
             Item: seal(() => children(subj$, index$)),
-            key: ++uniqueKey,
+            // @ts-ignore
+            key: getKey ? getKey(subj$.__value, index$.__value) : ++uniqueKey,
             backScope:
               bindBack &&
               runInReactiveScope(() => {
@@ -101,7 +103,8 @@ export const For = seal(<T extends any>(props: Props<T>) => {
               subj$,
               index$,
               Item: seal(() => children(subj$, index$)),
-              key: ++uniqueKey,
+              // @ts-ignore
+              key: getKey ? getKey(subj$.__value, index$.__value) : ++uniqueKey,
               backScope:
                 bindBack &&
                 runInReactiveScope(() => {
@@ -115,7 +118,24 @@ export const For = seal(<T extends any>(props: Props<T>) => {
           } else {
             // @ts-ignore
             if (mid[j].subj$.__curried !== newItems[j]) {
-              mid[j].subj$(newItems[j]);
+              if (getKey) {
+                const newKey = getKey(newItems[j], j);
+                if (mid[j].key !== newKey) {
+                  // if item by this key exists just reuse it.
+                  const itemByKey = renderItems.find(({ key }) => key === newKey);
+                  if (itemByKey) {
+                    mid[j] = itemByKey;
+                  } else {
+                    // item not found
+                    mid[j].key = newKey;
+                  }
+                  mid[j].subj$(newItems[j]);
+                } else {
+                  mid[j].subj$(newItems[j]);
+                }
+              } else {
+                mid[j].subj$(newItems[j]);
+              }
             }
           }
         }
@@ -131,11 +151,34 @@ export const For = seal(<T extends any>(props: Props<T>) => {
           renderItems[i].index$(i);
         }
       } else {
+        const prevRenderItems = renderItems;
         // len is not changed, just update
         for (let i = 0; i < newLen; i++) {
           // @ts-ignore
           if (renderItems[i].subj$.__value !== newItems[i]) {
-            renderItems[i].subj$(newItems[i]);
+            if (getKey) {
+              const newKey = getKey(newItems[i], i);
+              if (renderItems[i].key !== newKey) {
+                // we need to clone to re-render, and for swapping scenarios
+                if (prevRenderItems === renderItems) {
+                  renderItems = prevRenderItems.concat();
+                }
+                // if item by this key exists just reuse it.
+                const itemByKey = prevRenderItems.find(({ key }) => key === newKey);
+                if (itemByKey) {
+                  renderItems[i] = itemByKey;
+                } else {
+                  // item not found
+                  renderItems[i].key = newKey;
+                }
+                renderItems[i].subj$(newItems[i]);
+              } else {
+                renderItems[i].subj$(newItems[i]);
+              }
+            } else {
+              renderItems[i].subj$(newItems[i]);
+            }
+            
           }
         }
       }

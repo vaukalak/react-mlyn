@@ -80,15 +80,14 @@ export const mlynify = <T extends React.PropsWithChildren<object>>(
     const { current } = useRef({
       firstRun: true,
       state: unitialized,
-      plainProps: undefined,
       scope: undefined,
+      childScope: undefined,
       child: unitialized,
     });
+    const { children, ...rest } = props;
+    const [plainProps, mlynProps] = partitionObject(rest);
     if (current.firstRun) {
       current.firstRun = false;
-      const { children, ...rest } = props;
-      const [plainProps, mlynProps] = partitionObject(rest);
-      current.plainProps = plainProps;
       current.scope = runInReactiveScope(() => {
         const newValues: any = {};
         let changed = false;
@@ -108,7 +107,8 @@ export const mlynify = <T extends React.PropsWithChildren<object>>(
             forceUpdate();
           }
         }
-
+      });
+      current.childScope = runInReactiveScope(() => {
         if (typeof children === "function") {
           // @ts-ignore
           const newValue = children();
@@ -130,12 +130,15 @@ export const mlynify = <T extends React.PropsWithChildren<object>>(
         if (current.scope) {
           current.scope.destroy();
         }
+        if (current.childScope) {
+          current.childScope.destroy();
+        }
       },
       emptyArray
     );
     return React.createElement(
       tag,
-      Object.assign({}, current.plainProps, current.state),
+      Object.assign({}, plainProps, current.state),
       current.child
     );
   });

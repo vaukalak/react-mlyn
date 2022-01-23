@@ -161,3 +161,27 @@ test("bind-back when index changed", async () => {
   act(() => { bindBackCallbacks[0].v("c") })
   expect(mapChildren(container)).toEqual(["b", "c"]);
 });
+
+describe("keyed updates", () => {
+  it("should display entries with a computed key", () => {
+    const items$ = createSubject(["a", "b", "c"]);
+    const { container } = render(
+      <For each={items$} getKey={item => item}>
+        {(e$) => <div>{e$()}</div>}
+      </For>
+    );
+    expect(mapChildren(container)).toEqual(["a", "b", "c"]);
+  });
+
+  it("should swap first and last entries", () => {
+    const items$ = createSubject(["a", "b", "c"]);
+    const { container } = render(
+      <For each={items$} getKey={item => item}>
+        {(e$) => <div>{e$()}</div>}
+      </For>
+    );
+    expect(mapChildren(container)).toEqual(["a", "b", "c"]);
+    act(() => { items$(["c", "b", "a"]) });
+    expect(mapChildren(container)).toEqual(["c", "b", "a"]);
+  });
+});
