@@ -1,3 +1,6 @@
+/**
+ * partially taken from https://github.com/solidjs/solid/blob/main/packages/solid/src/reactive/array.ts
+ */
 import React, { useMemo } from "react";
 import { seal } from "./utils";
 import { useCompute, useObervableValue } from "./hooks";
@@ -94,6 +97,7 @@ export const For = seal(<T extends any>(props: Props<T>) => {
             renderItems[i].backScope.destroy();
           }
         }
+        let itemsIndex;
         for (let i = changesStart; i < newMidEnd; i++) {
           let j = i - changesStart;
           if (j >= mid.length) {
@@ -122,7 +126,13 @@ export const For = seal(<T extends any>(props: Props<T>) => {
                 const newKey = getKey(newItems[j], j);
                 if (mid[j].key !== newKey) {
                   // if item by this key exists just reuse it.
-                  const itemByKey = renderItems.find(({ key }) => key === newKey);
+                  if (!itemsIndex) {
+                    itemsIndex = {};
+                    renderItems.forEach((item) => {
+                      itemsIndex[item.key] = item;
+                    });
+                  }
+                  const itemByKey = itemsIndex[newKey];
                   if (itemByKey) {
                     mid[j] = itemByKey;
                   } else {
@@ -152,6 +162,7 @@ export const For = seal(<T extends any>(props: Props<T>) => {
         }
       } else {
         const prevRenderItems = renderItems;
+        const index = {};
         // len is not changed, just update
         for (let i = 0; i < newLen; i++) {
           // @ts-ignore
@@ -161,10 +172,13 @@ export const For = seal(<T extends any>(props: Props<T>) => {
               if (renderItems[i].key !== newKey) {
                 // we need to clone to re-render, and for swapping scenarios
                 if (prevRenderItems === renderItems) {
+                  prevRenderItems.forEach((item) => {
+                    index[item.key] = item;
+                  });
                   renderItems = prevRenderItems.concat();
                 }
                 // if item by this key exists just reuse it.
-                const itemByKey = prevRenderItems.find(({ key }) => key === newKey);
+                const itemByKey = index[newKey];
                 if (itemByKey) {
                   renderItems[i] = itemByKey;
                 } else {
